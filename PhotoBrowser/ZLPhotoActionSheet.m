@@ -237,6 +237,8 @@ double const ScalePhotoWidth = 1000;
         model.selected = YES;
         [models addObject:model];
     }
+    
+    [self.arrSelectedModels removeAllObjects];
     ZLShowBigImgViewController *svc = [self pushBigImageToPreview:photos models:models index:index];
     
     zl_weakify(self);
@@ -287,6 +289,8 @@ double const ScalePhotoWidth = 1000;
         model.selected = YES;
         [models addObject:model];
     }
+    
+    [self.arrSelectedModels removeAllObjects];
     ZLShowBigImgViewController *svc = [self pushBigImageToPreview:photos models:models index:index];
     svc.hideToolBar = hideToolBar;
     
@@ -841,6 +845,8 @@ double const ScalePhotoWidth = 1000;
 
 - (ZLShowBigImgViewController *)pushBigImageToPreview:(NSArray *)photos models:(NSArray<ZLPhotoModel *> *)models index:(NSInteger)index
 {
+    [self.arrSelectedModels addObjectsFromArray:models];
+    
     ZLShowBigImgViewController *svc = [[ZLShowBigImgViewController alloc] init];
     ZLImageNavigationController *nav = [self getImageNavWithRootVC:svc];
     svc.selectIndex = index;
@@ -919,16 +925,26 @@ double const ScalePhotoWidth = 1000;
 
 - (void)handleDataArray:(ZLPhotoModel *)model
 {
+    zl_weakify(self);
+    BOOL (^shouldSelect)(void) = ^BOOL() {
+        zl_strongify(weakSelf);
+        if (model.type == ZLAssetMediaTypeVideo) {
+            return (model.asset.duration <= strongSelf.configuration.maxVideoDuration);
+        }
+        return YES;
+    };
+    
     [self.arrDataSources insertObject:model atIndex:0];
     if (self.arrDataSources.count > self.configuration.maxPreviewCount) {
         [self.arrDataSources removeLastObject];
     }
-    if (self.configuration.maxSelectCount > 1 && self.arrSelectedModels.count < self.configuration.maxSelectCount) {
-        model.selected = YES;
+    BOOL sel = shouldSelect();
+    if (self.configuration.maxSelectCount > 1 && self.arrSelectedModels.count < self.configuration.maxSelectCount && sel) {
+        model.selected = sel;
         [self.arrSelectedModels addObject:model];
-    } else if (self.configuration.maxSelectCount == 1 && !self.arrSelectedModels.count) {
+    } else if (self.configuration.maxSelectCount == 1 && !self.arrSelectedModels.count && sel) {
         if (![self shouldDirectEdit:model]) {
-            model.selected = YES;
+            model.selected = sel;
             [self.arrSelectedModels addObject:model];
             [self requestSelPhotos:nil data:self.arrSelectedModels hideAfterCallBack:YES];
             return;

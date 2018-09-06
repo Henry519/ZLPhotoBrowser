@@ -175,13 +175,13 @@
     
     self.dismissBtn = [UIButton buttonWithType:UIButtonTypeCustom];
     self.dismissBtn.frame = CGRectMake(60, self.bounds.size.height/2-25/2, 25, 25);
-    [self.dismissBtn setImage:GetImageWithName(@"arrow_down") forState:UIControlStateNormal];
+    [self.dismissBtn setImage:GetImageWithName(@"zl_arrow_down") forState:UIControlStateNormal];
     [self.dismissBtn addTarget:self action:@selector(dismissVC) forControlEvents:UIControlEventTouchUpInside];
     [self addSubview:self.dismissBtn];
     
     self.cancelBtn = [UIButton buttonWithType:UIButtonTypeCustom];
     self.cancelBtn.backgroundColor = [kRGB(244, 244, 244) colorWithAlphaComponent:.9];
-    [self.cancelBtn setImage:GetImageWithName(@"retake") forState:UIControlStateNormal];
+    [self.cancelBtn setImage:GetImageWithName(@"zl_retake") forState:UIControlStateNormal];
     [self.cancelBtn addTarget:self action:@selector(retake) forControlEvents:UIControlEventTouchUpInside];
     self.cancelBtn.layer.masksToBounds = YES;
     self.cancelBtn.hidden = YES;
@@ -190,7 +190,7 @@
     self.doneBtn = [UIButton buttonWithType:UIButtonTypeCustom];
     self.doneBtn.frame = self.bottomView.frame;
     self.doneBtn.backgroundColor = [UIColor whiteColor];
-    [self.doneBtn setImage:GetImageWithName(@"takeok") forState:UIControlStateNormal];
+    [self.doneBtn setImage:GetImageWithName(@"zl_takeok") forState:UIControlStateNormal];
     [self.doneBtn addTarget:self action:@selector(doneClick) forControlEvents:UIControlEventTouchUpInside];
     self.doneBtn.layer.masksToBounds = YES;
     self.doneBtn.hidden = YES;
@@ -400,13 +400,17 @@
     
     [AVCaptureDevice requestAccessForMediaType:AVMediaTypeVideo completionHandler:^(BOOL granted) {
         if (granted) {
-            [AVCaptureDevice requestAccessForMediaType:AVMediaTypeAudio completionHandler:^(BOOL granted) {
-                if (!granted) {
-                    [self onDismiss];
-                } else {
-                    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(willResignActive) name:UIApplicationWillResignActiveNotification object:nil];
-                }
-            }];
+            if (self.allowRecordVideo) {
+                [AVCaptureDevice requestAccessForMediaType:AVMediaTypeAudio completionHandler:^(BOOL granted) {
+                    if (!granted) {
+                        [self onDismiss];
+                    } else {
+                        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(willResignActive) name:UIApplicationWillResignActiveNotification object:nil];
+                    }
+                }];
+            } else {
+                [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(willResignActive) name:UIApplicationWillResignActiveNotification object:nil];
+            }
         } else {
             [self onDismiss];
         }
@@ -521,7 +525,7 @@
     self.toolView.maxRecordDuration = self.maxRecordDuration;
     [self.view addSubview:self.toolView];
     
-    self.focusCursorImageView = [[UIImageView alloc] initWithImage:GetImageWithName(@"focus")];
+    self.focusCursorImageView = [[UIImageView alloc] initWithImage:GetImageWithName(@"zl_focus")];
     self.focusCursorImageView.contentMode = UIViewContentModeScaleAspectFit;
     self.focusCursorImageView.clipsToBounds = YES;
     self.focusCursorImageView.frame = CGRectMake(0, 0, 80, 80);
@@ -529,7 +533,7 @@
     [self.view addSubview:self.focusCursorImageView];
     
     self.toggleCameraBtn = [UIButton buttonWithType:UIButtonTypeCustom];
-    [self.toggleCameraBtn setImage:GetImageWithName(@"toggle_camera") forState:UIControlStateNormal];
+    [self.toggleCameraBtn setImage:GetImageWithName(@"zl_toggle_camera") forState:UIControlStateNormal];
     [self.toggleCameraBtn addTarget:self action:@selector(btnToggleCameraAction) forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:self.toggleCameraBtn];
     
@@ -554,7 +558,11 @@
     
     //音频输入流
     AVCaptureDevice *audioCaptureDevice = [AVCaptureDevice devicesWithMediaType:AVMediaTypeAudio].firstObject;
-    AVCaptureDeviceInput *audioInput = [[AVCaptureDeviceInput alloc] initWithDevice:audioCaptureDevice error:nil];
+    AVCaptureDeviceInput *audioInput = nil;
+    if (self.allowRecordVideo) {
+        audioInput = [[AVCaptureDeviceInput alloc] initWithDevice:audioCaptureDevice error:nil];
+    }
+    
     
     //视频输出流
     //设置视频格式
@@ -571,7 +579,7 @@
     if ([self.session canAddInput:self.videoInput]) {
         [self.session addInput:self.videoInput];
     }
-    if ([self.session canAddInput:audioInput]) {
+    if (audioInput && [self.session canAddInput:audioInput]) {
         [self.session addInput:audioInput];
     }
     //将输出流添加到session

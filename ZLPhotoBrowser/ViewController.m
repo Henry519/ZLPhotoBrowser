@@ -142,13 +142,15 @@
     actionSheet.configuration.languageType = self.languageSegment.selectedSegmentIndex;
     //自定义多语言
 //    actionSheet.configuration.customLanguageKeyValue = @{@"ZLPhotoBrowserCameraText": @"没错，我就是一个相机"};
+    //自定义图片
+//    actionSheet.configuration.customImageNames = @[@"zl_navBack"];
     
     //是否使用系统相机
 //    actionSheet.configuration.useSystemCamera = YES;
 //    actionSheet.configuration.sessionPreset = ZLCaptureSessionPreset1920x1080;
 //    actionSheet.configuration.exportVideoType = ZLExportVideoTypeMp4;
 //    actionSheet.configuration.allowRecordVideo = NO;
-    
+//    actionSheet.configuration.maxVideoDuration = 5;
 #pragma mark - required
     //如果调用的方法没有传sender，则该属性必须提前赋值
     actionSheet.sender = self;
@@ -188,6 +190,7 @@
         zl_strongify(weakSelf);
         [hud hide];
         strongSelf.arrDataSources = images;
+        strongSelf.lastSelectPhotos = images.mutableCopy;
         [strongSelf.collectionView reloadData];
         NSLog(@"%@", images);
     }];
@@ -236,8 +239,8 @@
 
 - (IBAction)btnPreviewNetImageClick:(id)sender
 {
-    NSArray *arrNetImages = @[GetDictForPreviewPhoto([NSURL URLWithString:@"http://pic.962.net/up/2013-11/20131111660842025734.jpg"], ZLPreviewPhotoTypeURLImage),
-                              GetDictForPreviewPhoto([NSURL URLWithString:@"http://120.25.226.186:32812/resources/videos/minion_01.mp4"], ZLPreviewPhotoTypeURLVideo),
+    NSArray *arrNetImages = @[GetDictForPreviewPhoto([NSURL URLWithString:@"https://jilulu.xyz/out.mp4"], ZLPreviewPhotoTypeURLVideo),
+                              GetDictForPreviewPhoto([NSURL URLWithString:@"http://pic.962.net/up/2013-11/20131111660842025734.jpg"], ZLPreviewPhotoTypeURLImage),
                               GetDictForPreviewPhoto([NSURL URLWithString:@"http://pic.962.net/up/2013-11/20131111660842034354.jpg"], ZLPreviewPhotoTypeURLImage),
                               GetDictForPreviewPhoto([NSURL URLWithString:@"https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1514184259027&di=a2e54cf2d5affe17acdaf1fbf19ff0af&imgtype=0&src=http%3A%2F%2Fimg5.duitang.com%2Fuploads%2Fitem%2F201212%2F25%2F20121225173302_wTjN8.jpeg"], ZLPreviewPhotoTypeURLImage),
                               GetDictForPreviewPhoto([NSURL URLWithString:@"https://timgsa.baidu.com/timg?image&quality=80&size=b9999_10000&sec=1504756336591&di=56a3c8866c95891cbb9c43f907b4f954&imgtype=0&src=http%3A%2F%2Ff5.topitme.com%2F5%2Fa0%2F42%2F111173677859242a05o.jpg"], ZLPreviewPhotoTypeURLImage),
